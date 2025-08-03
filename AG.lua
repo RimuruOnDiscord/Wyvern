@@ -755,7 +755,8 @@ end
 updateRewardLabel()
 end
 
-
+if workspace:FindFirstChild("GameSettings") then
+else
 local function setupCapsuleUI()
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local Players = game:GetService("Players")
@@ -856,8 +857,12 @@ local function setupCapsuleUI()
     })
 end
 
-setupCapsuleUI()
 
+setupCapsuleUI()
+end
+
+if workspace:FindFirstChild("GameSettings") then
+else
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
@@ -881,25 +886,37 @@ if #ValidItems == 0 then
     return
 end
 
+-- Get player list excluding self
+local function getOtherPlayers()
+    local others = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            table.insert(others, player.Name)
+        end
+    end
+    return others
+end
+
 -- UI State
 local SelectedItem = ValidItems[1]
-local TargetPlayer = ""
+local SelectedPlayer = getOtherPlayers()[1] or ""
 local IsLooping = false
 
 giftboxiguess:AddDropdown("Gift Item", {
     Text = "Select Item",
     Values = ValidItems,
-    Default = ValidItems[1],
+    Default = SelectedItem,
     Callback = function(value)
         SelectedItem = value
     end
 })
 
-giftboxiguess:AddInput("Target Username", {
-    Default = "",
-    Placeholder = "Enter player username",
+giftboxiguess:AddDropdown("Target Player", {
+    Text = "Select Player",
+    Values = getOtherPlayers(),
+    Default = SelectedPlayer,
     Callback = function(value)
-        TargetPlayer = value
+        SelectedPlayer = value
     end
 })
 
@@ -912,15 +929,14 @@ giftboxiguess:AddToggle("Auto-Gift Toggle", {
         if IsLooping then
             task.spawn(function()
                 while IsLooping and task.wait(0.5) do
-                    if TargetPlayer ~= "" and SelectedItem then
+                    if SelectedPlayer and SelectedItem then
                         local args = {
                             "Gift",
                             {
-                                TargetPlayer,
+                                SelectedPlayer,
                                 SelectedItem
                             }
                         }
-
                         GiftEvent:InvokeServer(unpack(args))
                     end
                 end
@@ -928,6 +944,7 @@ giftboxiguess:AddToggle("Auto-Gift Toggle", {
         end
     end
 })
+end
 
 
 -- UI Settings tab
