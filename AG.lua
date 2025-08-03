@@ -858,6 +858,76 @@ end
 
 setupCapsuleUI()
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+
+local LocalPlayer = Players.LocalPlayer
+local ItemsInventory = LocalPlayer:WaitForChild("ItemsInventory")
+local GiftPass = ReplicatedStorage:WaitForChild("GiftPass")
+local GiftEvent = ReplicatedStorage:WaitForChild("PlayMode").Events:WaitForChild("Gift")
+
+local giftboxiguess = Tabs.Main:AddRightGroupbox("Auto-Gift")
+
+-- Get giftable items from inventory
+local ValidItems = {}
+for _, item in ipairs(ItemsInventory:GetChildren()) do
+    if GiftPass:FindFirstChild(item.Name) then
+        table.insert(ValidItems, item.Name)
+    end
+end
+
+if #ValidItems == 0 then
+    giftboxiguess:AddLabel("❌ No giftable items.")
+    return
+end
+
+-- UI State
+local SelectedItem = ValidItems[1]
+local TargetPlayer = ""
+local IsLooping = false
+
+giftboxiguess:AddDropdown("Gift Item", {
+    Text = "Select Item",
+    Values = ValidItems,
+    Default = ValidItems[1],
+    Callback = function(value)
+        SelectedItem = value
+    end
+})
+
+giftboxiguess:AddInput("Target Username", {
+    Default = "",
+    Placeholder = "Enter player username",
+    Callback = function(value)
+        TargetPlayer = value
+    end
+})
+
+giftboxiguess:AddToggle("Auto-Gift Toggle", {
+    Text = "Auto-Gift Enabled",
+    Default = false,
+    Callback = function(state)
+        IsLooping = state
+
+        if IsLooping then
+            task.spawn(function()
+                while IsLooping and task.wait(0.5) do
+                    if TargetPlayer ~= "" and SelectedItem then
+                        local args = {
+                            "Gift",
+                            {
+                                TargetPlayer,
+                                SelectedItem
+                            }
+                        }
+
+                        GiftEvent:InvokeServer(unpack(args))
+                    end
+                end
+            end)
+        end
+    end
+})
 
 
 -- UI Settings tab
