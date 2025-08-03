@@ -928,7 +928,7 @@ giftboxiguess:AddToggle("Auto-Gift Toggle", {
 
         if IsLooping then
             task.spawn(function()
-                while IsLooping and task.wait(0.5) do
+                while IsLooping and task.wait(0.01) do
                     if SelectedPlayer and SelectedItem then
                         local args = {
                             "Gift",
